@@ -1,0 +1,27 @@
+[paris]
+192.168.241.41
+192.168.241.42
+
+[paris:vars]
+City=Paris
+Country=France
+
+[marseille]
+192.168.241.43
+
+[marseille:vars]
+City=Marseille
+Country=France
+
+[france_sensors:children]
+paris
+marseille
+
+# Global variables
+[all:vars]
+CSMP_VERSION=5.10.200.100
+Image_Registry_IP=192.168.241.3
+CSMP_Master_IP=192.168.241.9
+ansible_ssh_user=vagrant
+ansible_ssh_pass=vagrant
+home_user=vagrant

@@ -1,0 +1,15 @@
+
+---
+
+- name: cloudlens
+  docker_container:
+    name: MY_CL
+    image: ixiacom/cloudlens-sandbox-agent:latest
+    state: started
+    network_mode: host
+    capabilities:
+     - SYS_RAWIO
+     - SYS_ADMIN
+     - NET_ADMIN
+    privileged: true
+    command: --accept_eula yes --apikey {{ CLOUDLENS_SAAS_KEY }} --custom_tags workload=gustavo

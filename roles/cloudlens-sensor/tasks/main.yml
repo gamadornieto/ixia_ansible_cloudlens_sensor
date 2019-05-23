@@ -1,0 +1,89 @@
+# Deploy Cloudlens sensors in remote machines
+---
+
+- name: Get version from Docker Image Registry
+  get_url:
+   url: https://{{Image_Registry_IP }}:5000/v2/sensor/tags/list
+   dest: /home/{{home_user}}/sensor_version.txt
+   validate_certs: no
+   force: yes
+
+- name: Get sensor version 1/2
+  replace:
+    path: /home/{{home_user}}/sensor_version.txt
+    regexp: '(.*)tags\":\["'
+    replace: ''
+
+- name: Get sensor version 2/2
+  replace:
+    path: /home/{{home_user}}/sensor_version.txt
+    regexp: '"]}'
+    replace: ''
+
+- name:  Read sensor version
+  command: cat /home/{{home_user}}/sensor_version.txt
+  register: pp
+
+- set_fact:
+   CSMP_VERSION: "{{ pp.stdout }}"
+
+- name: Display variables
+  debug:
+   msg: " Cloudlens Register is {{Image_Registry_IP }} with version {{ CSMP_VERSION }}, CSMP master IP is {{ CSMP_Master_IP }} action is {{script_action}}  user is {{home_user}}"
+
+- name: Add this user to group docker
+  user:
+    name: "{{home_user}}"
+    group: docker
+    append: yes
+
+- name: Ensuring that vagrant is able to use sudo without password
+  lineinfile:
+   path: /etc/sudoers
+   regexp: '^%{{home_user}}'
+   line: '%{{home_user}}t ALL=(ALL) NOPASSWD: ALL'
+   validate: 'visudo -cf %s'
+
+- name: Puts daemon.json @ /etc/docker
+  template:
+   src: ../templates/daemon.json.j2
+   dest: /etc/docker/daemon.json
+   owner:  "{{home_user}}"
+   group:  "{{home_user}}"
+   mode: '0777'
+
+- name: Display where is sensor
+  debug:
+   msg: This sensor is located in {{ Country }} {{ City }} {{Image_Registry_IP }} {{ CSMP_Master_IP }}
+
+- name:  Copy sensor PAN yml
+  template:
+   src: ../templates/sensor_pan_cfg.yml.j2
+   dest: /home/{{home_user}}/sensor_pan_cfg.yml
+   owner: "{{home_user}}"
+   group: "{{home_user}}"
+   mode: '0777'
+
+
+- name: Restart docker service daemon
+  service:
+   name: docker
+   state: restarted
+
+
+- name: Copy deploy_tap_stack script
+  copy:
+    src: ../scripts/deploy_tap_stack_{{ CSMP_VERSION }}.sh
+    dest: /home/{{home_user}}/deploy_tap_stack.sh
+    owner:  "{{home_user}}"
+    group:  "{{home_user}}"
+    mode: '0777'
+
+
+- name: Execute the script
+  command: bash /home/{{home_user}}/deploy_tap_stack.sh  --{{script_action}} {{ Image_Registry_IP }} {{ CSMP_Master_IP }}
+
+
+
+#- name: Run deploy_tap_stack script
+#  script: ../scripts/deploy_tap_stack.sh  --install 192.168.241.3 192.168.241.5

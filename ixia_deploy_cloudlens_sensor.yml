@@ -1,0 +1,11 @@
+---
+## Install Ixia Cloudlens sensors
+
+#- hosts: [marseille|paris|france_sensors]
+- hosts: france_sensors
+  become: true
+  gather_facts: no
+  vars:
+    script_action: install
+  roles:
+    - cloudlens-sensor

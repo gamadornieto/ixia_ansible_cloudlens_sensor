@@ -1,0 +1,3 @@
+ansible linux_sensors -i inventory -m ping
+ansible-playbook -i inventory ixia_deploy_cloudlens_sensor.yml
+ansible-playbook -i inventory ixia_remove_cloudlens_sensor.yml
